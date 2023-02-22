@@ -1,4 +1,3 @@
 .DS_Store
 .infracost/terraform_modules/manifest.json
 .terraform/*
-.vscode/*
