@@ -33,15 +33,10 @@ provider "aws"{
   }
 }
 
-
-variable "vpc_cidr_blocks" {   
-  description = "vpc cidr block range"
-}
-variable "subnet_cidr_block" {
-    description=" subnet cidr block"
-}
+variable "myip" {}
+variable "vpc_cidr_blocks" {}
+variable "subnet_cidr_block" {}
 variable "avail_zone" {}
-
 variable "env_prefix" {}
 
 resource "aws_vpc"  "myapp-vpc" {
@@ -64,6 +59,59 @@ resource "aws_subnet" "myapp-subnet-1" {
 }
 
   
+resource "aws_default_route_table" "main-rtb" {
+  default_route_table_id= aws_vpc.myapp-vpc.default_route_table_id
+  #vpc_id =  aws_vpc.myapp-vpc.id
+  route  {
+    cidr_block="0.0.0.0/0"
+    gateway_id= aws_internet_gateway.myapp-igw.id
+  }
+   tags = {
+    name : "${var.env_prefix}-main-rtb"
+  }
+}
+
+resource "aws_internet_gateway" "myapp-igw" {
+  vpc_id =  aws_vpc.myapp-vpc.id
+  tags = {
+    name : "${var.env_prefix}-igw-1"
+  }
+}
+
+/*resource "aws_route_table_association" "a-rtb-subnet" { 
+  route_table_id=aws_route_table.myapp-route-table.id
+  subnet_id=aws_subnet.myapp-subnet-1.id
+}*/
+
+resource "asw_default_security_group" "default-sg"{
+  vpc_id =  aws_vpc.myapp-vpc.id
+  
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocole= "tcp"
+    cidr_blocks =[var.myip]
+  }
+
+  ingress {
+    from_port = 8080
+    to_port= 8080
+    protocole= "tcp"
+    cidr_blocks=["0.0.0.0/0"]
+  }
+
+  engress {     
+    from_port = 0
+    to_port= 0
+    protocole= "-1"
+    cidr_blocks =["0.0.0.0/0"]
+    prefix_list_ids = []
+  }
+ 
+tags = {
+    name : "${var.env_prefix}-default-sg"
+  }
+}
 
 
-
+ 
